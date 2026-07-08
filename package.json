@@ -1,7 +1,4 @@
 {
   "name": "gate-ece-tracker",
-  "private": true,
-  "scripts": {
-    "build": "node scripts/create-runtime-config.mjs && mkdir -p public && cp index.html public/ && cp *.js public/ 2>/dev/null || true && cp *.css public/ 2>/dev/null || true"
-  }
+  "private": true
 }
