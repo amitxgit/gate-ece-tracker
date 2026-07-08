@@ -450,7 +450,6 @@ DATA.forEach(sec => sec.topics.forEach((t,i) => t.id = sec.id + '-' + i));
 const ALL_TOPICS = DATA.flatMap(s => s.topics.map(t => ({...t, sectionId:s.id})));
 
 // ---------------- State ----------------
-const STORAGE_KEY = 'gate-ece-tracker-v1';
 const DEFAULT_EXAM_DATE = '2027-02-01';
 let state = { checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
 let expandedSections = new Set();
@@ -458,10 +457,12 @@ let searchQuery = '';
 
 async function loadState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, parsed);
+    const res = await fetch('/api/state');
+    if(res.ok){
+      const { value } = await res.json();
+      if(value){
+        state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, value);
+      }
     }
   }catch(e){ /* no saved state yet */ }
 }
@@ -470,7 +471,14 @@ let saveTimer = null;
 function saveState(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
-    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    try{
+      const res = await fetch('/api/state', {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(state),
+      });
+      if(!res.ok) throw new Error('save failed with status ' + res.status);
+    }
     catch(e){ console.error('save failed', e); showToast('Could not save — try again'); }
   }, 250);
 }
