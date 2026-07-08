@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GATE ECE — Syllabus Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#F1F3EE;
+  --paper-raised:#FFFFFF;
+  --grid-line:#E2E7DE;
+  --ink:#182019;
+  --muted:#6D766D;
+  --muted-2:#9AA096;
+  --line:#DBDFD5;
+  --copper:#B5651D;
+  --copper-dark:#8A4E16;
+  --copper-soft:#F2E2CE;
+  --green:#2E6B4F;
+  --green-dark:#1F4E39;
+  --green-soft:#DCEAE1;
+  --scope-bg:#0F1E18;
+  --scope-grid:#1D3A2C;
+  --scope-trace:#5FDBA3;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(24,32,25,.06), 0 4px 14px rgba(24,32,25,.05);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background-color:var(--paper);
+  background-image:radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
+  background-size:22px 22px;
+  color:var(--ink);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important;}
+}
+h1,h2,h3{font-family:'Space Grotesk', sans-serif; margin:0;}
+.mono{font-family:'IBM Plex Mono', monospace;}
+button{font-family:inherit;}
+input,textarea{font-family:inherit;}
+:focus-visible{outline:2px solid var(--copper-dark); outline-offset:2px;}
+
+#loadingScreen{
+  position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace; color:var(--muted); font-size:13px; letter-spacing:.04em; z-index:50;
+}
+
+.app{max-width:760px; margin:0 auto; padding:0 18px 60px;}
+
+/* ---------- Topbar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px 0 12px;
+  background:linear-gradient(var(--paper) 78%, transparent);
+  backdrop-filter:blur(2px);
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-mark{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; letter-spacing:.08em;
+  color:var(--paper-raised); background:var(--ink); padding:4px 7px; border-radius:5px;
+}
+.brand h1{font-size:19px; font-weight:600; line-height:1.1;}
+.brand .tagline{margin:2px 0 0; font-size:12px; color:var(--muted);}
+
+.countdown-wrap{position:relative;}
+.countdown{
+  display:flex; align-items:baseline; gap:5px; background:var(--paper-raised); border:1px solid var(--line);
+  border-radius:20px; padding:7px 12px; cursor:pointer; box-shadow:var(--shadow);
+}
+.countdown-num{font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:14px; color:var(--copper-dark);}
+.countdown-unit{font-size:11px; color:var(--muted);}
+.countdown-input{
+  display:none; position:absolute; right:0; top:0; z-index:2;
+  padding:7px 10px; border-radius:20px; border:1px solid var(--copper); font-size:13px;
+  font-family:'IBM Plex Mono', monospace; background:var(--paper-raised); color:var(--ink);
+}
+.countdown-wrap.editing .countdown{display:none;}
+.countdown-wrap.editing .countdown-input{display:block;}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex; gap:4px; padding:2px 0 18px; border-bottom:1px solid var(--line);}
+.tab{
+  background:none; border:none; padding:9px 4px; margin-right:14px; font-size:13.5px; font-weight:500;
+  color:var(--muted); cursor:pointer; position:relative; letter-spacing:.01em;
+}
+.tab::after{
+  content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--copper);
+  transform:scaleX(0); transition:transform .2s ease;
+}
+.tab.active{color:var(--ink);}
+.tab.active::after{transform:scaleX(1);}
+
+.panel{display:none;}
+.panel.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);}}
+
+/* ---------- Hero ---------- */
+.hero{
+  display:flex; align-items:center; gap:20px; padding:22px 0 18px;
+}
+.hero-num{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:clamp(40px,10vw,56px); line-height:1; color:var(--ink); display:flex; align-items:flex-start;}
+.hero-num .unit{font-size:20px; margin-top:6px; margin-left:2px; color:var(--muted);}
+.hero-meta{flex:1; min-width:0;}
+.hero-stat{font-size:13.5px; color:var(--muted); margin-bottom:9px;}
+.hero-stat strong{color:var(--ink); font-family:'IBM Plex Mono', monospace; font-weight:600;}
+
+.trace-bar{display:flex; gap:4px;}
+.trace-seg{
+  flex:1; height:9px; background:var(--paper-raised); border:1px solid var(--line); border-radius:3px;
+  overflow:hidden; cursor:default;
+}
+.trace-fill{height:100%; background:linear-gradient(90deg, var(--copper), var(--green)); width:0%; transition:width .3s ease;}
+
+/* ---------- Search ---------- */
+.search-row{margin-bottom:14px;}
+#searchInput{
+  width:100%; padding:10px 13px; border:1px solid var(--line); border-radius:var(--radius);
+  background:var(--paper-raised); font-size:13.5px; color:var(--ink);
+}
+#searchInput::placeholder{color:var(--muted-2);}
+.no-match{padding:26px 4px; text-align:center; color:var(--muted); font-size:13.5px;}
+
+/* ---------- Section cards ---------- */
+.section-card{
+  background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+  margin-bottom:10px; box-shadow:var(--shadow); overflow:hidden;
+}
+.section-head{
+  width:100%; display:flex; align-items:center; gap:10px; padding:13px 14px; background:none; border:none;
+  cursor:pointer; text-align:left;
+}
+.section-num{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted-2); flex-shrink:0; width:20px;
+}
+.section-title{font-size:14px; font-weight:600; flex-shrink:0; margin-right:2px;}
+.pad-row{display:flex; flex-wrap:wrap; gap:3px; flex:1; min-width:60px;}
+.pad{width:9px; height:9px; border:1.4px solid var(--copper); border-radius:2px; flex-shrink:0; background:transparent;}
+.pad.done{background:var(--green); border-color:var(--green);}
+.section-pct{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); flex-shrink:0;}
+.chevron{width:14px; height:14px; flex-shrink:0; color:var(--muted-2); transition:transform .2s ease;}
+.section-card.expanded .chevron{transform:rotate(180deg);}
+
+.section-body{display:grid; grid-template-rows:0fr; transition:grid-template-rows .22s ease;}
+.section-card.expanded .section-body{grid-template-rows:1fr;}
+.section-body-inner{overflow:hidden; min-height:0;}
+.topics{padding:2px 14px 12px; border-top:1px solid var(--grid-line);}
+.topic-row{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;}
+.topic-row:last-child{border-bottom:none;}
+.topic-row.hidden{display:none;}
+input[type=checkbox].topic-check{
+  appearance:none; -webkit-appearance:none; width:17px; height:17px; border:1.5px solid var(--copper);
+  border-radius:4px; position:relative; cursor:pointer; flex-shrink:0; margin-top:1px; background:var(--paper-raised);
+  transition:background .15s, border-color .15s;
+}
+input[type=checkbox].topic-check:checked{background:var(--green); border-color:var(--green);}
+input[type=checkbox].topic-check:checked::after{
+  content:''; position:absolute; left:5px; top:2px; width:4px; height:8px;
+  border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);
+}
+.topic-text strong{display:block; font-size:13.5px; font-weight:500;}
+.topic-text small{display:block; font-size:12px; color:var(--muted); margin-top:1px; line-height:1.4;}
+mark{background:var(--copper-soft); color:inherit; border-radius:2px;}
+
+/* ---------- PYQ tab ---------- */
+.pyq-row{
+  background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+  padding:13px 14px; margin-bottom:9px; box-shadow:var(--shadow);
+}
+.pyq-row-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px;}
+.pyq-row-head .t{font-size:13.5px; font-weight:600;}
+.pyq-row-head .p{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--copper-dark);}
+.pyq-inputs{display:flex; gap:10px; margin-bottom:9px;}
+.pyq-inputs label{flex:1; font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;}
+.pyq-inputs input{
+  padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px;
+  font-family:'IBM Plex Mono', monospace; width:100%;
+}
+.pyq-bar{height:6px; background:var(--paper); border-radius:3px; overflow:hidden;}
+.pyq-bar-fill{height:100%; background:var(--copper); border-radius:3px; transition:width .25s ease;}
+
+/* ---------- Mock tests ---------- */
+.mock-stats{display:flex; gap:10px; margin:18px 0 14px;}
+.stat-card{flex:1; background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; box-shadow:var(--shadow);}
+.stat-card .v{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:22px;}
+.stat-card .l{font-size:11px; color:var(--muted); margin-top:2px;}
+
+.scope-wrap{
+  background:var(--scope-bg); border-radius:var(--radius); padding:12px 6px 4px; margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.scope-wrap svg{width:100%; height:180px; display:block;}
+.scope-grid-line{stroke:var(--scope-grid); stroke-width:1;}
+.scope-axis-label{fill:#5A7A6A; font-family:'IBM Plex Mono', monospace; font-size:9px;}
+.scope-line{fill:none; stroke:var(--scope-trace); stroke-width:2; stroke-linejoin:round; stroke-linecap:round;}
+.scope-dot{fill:var(--scope-trace); stroke:var(--scope-bg); stroke-width:1.5;}
+.scope-empty{fill:#5A7A6A; font-family:'IBM Plex Mono', monospace; font-size:12px;}
+
+.add-mock-btn{
+  width:100%; padding:11px; border:1.5px dashed var(--copper); border-radius:var(--radius); background:none;
+  color:var(--copper-dark); font-size:13.5px; font-weight:500; cursor:pointer; margin-bottom:14px;
+}
+.mock-form{
+  background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:16px;
+  margin-bottom:16px; box-shadow:var(--shadow);
+}
+.mock-form .row{display:flex; gap:10px; margin-bottom:10px;}
+.mock-form .field{flex:1; display:flex; flex-direction:column; gap:5px;}
+.mock-form label{font-size:11px; color:var(--muted);}
+.mock-form input, .mock-form textarea{
+  padding:9px 10px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; width:100%; color:var(--ink);
+}
+.mock-form textarea{resize:vertical; min-height:44px;}
+.mock-form .actions{display:flex; gap:8px; margin-top:4px;}
+.btn-primary{background:var(--ink); color:var(--paper-raised); border:none; padding:9px 16px; border-radius:7px; font-size:13px; font-weight:500; cursor:pointer;}
+.btn-ghost{background:none; border:1px solid var(--line); padding:9px 16px; border-radius:7px; font-size:13px; cursor:pointer; color:var(--muted);}
+
+.mock-item{
+  display:flex; align-items:flex-start; gap:12px; background:var(--paper-raised); border:1px solid var(--line);
+  border-radius:var(--radius); padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow);
+}
+.mock-score{
+  font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:15px; color:var(--paper-raised);
+  background:var(--green); border-radius:7px; padding:6px 9px; flex-shrink:0; min-width:44px; text-align:center;
+}
+.mock-score.low{background:var(--copper);}
+.mock-body{flex:1; min-width:0;}
+.mock-title{font-size:13.5px; font-weight:600;}
+.mock-date{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); margin-top:1px;}
+.mock-remarks{font-size:12px; color:var(--muted); margin-top:5px; line-height:1.4;}
+.mock-del{background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:16px; line-height:1; padding:2px 4px; flex-shrink:0;}
+.mock-del:hover{color:var(--copper-dark);}
+.mock-empty{text-align:center; color:var(--muted); font-size:13px; padding:16px 0;}
+
+/* ---------- Footer ---------- */
+footer{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:26px; padding-top:16px;
+  border-top:1px solid var(--line); flex-wrap:wrap;
+}
+.footer-actions{display:flex; gap:8px;}
+.footer-btn{
+  background:none; border:1px solid var(--line); border-radius:7px; padding:7px 12px; font-size:12px;
+  color:var(--muted); cursor:pointer;
+}
+.footer-btn:hover{color:var(--ink); border-color:var(--copper);}
+.footnote{font-size:11px; color:var(--muted-2);}
+
+.toast{
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(10px); opacity:0;
+  background:var(--ink); color:var(--paper-raised); font-size:12.5px; padding:9px 16px; border-radius:20px;
+  pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:40;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+@media (max-width:480px){
+  .brand h1{font-size:17px;}
+  .section-title{display:none;}
+  .hero-num{font-size:40px;}
+  .mock-stats{flex-wrap:wrap;}
+  .stat-card{min-width:calc(50% - 5px);}
+}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">loading tracker…</div>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">EC</span>
+      <div>
+        <h1>GATE ECE</h1>
+        <p class="tagline">Syllabus · PYQs · Mock Tests</p>
+      </div>
+    </div>
+    <div class="countdown-wrap" id="countdownWrap">
+      <button class="countdown" id="countdownChip" type="button" title="Click to set your exam date">
+        <span class="countdown-num" id="countdownNum">—</span>
+        <span class="countdown-unit">days to GATE</span>
+      </button>
+      <input type="date" class="countdown-input" id="examDateInput">
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="syllabus" type="button">Syllabus</button>
+    <button class="tab" data-tab="pyq" type="button">PYQs</button>
+    <button class="tab" data-tab="mocks" type="button">Mock Tests</button>
+  </nav>
+
+  <main>
+    <!-- SYLLABUS -->
+    <section class="panel active" id="tab-syllabus">
+      <div class="hero">
+        <div class="hero-num"><span id="heroPercent">0</span><span class="unit">%</span></div>
+        <div class="hero-meta">
+          <div class="hero-stat"><strong id="heroDone">0</strong>&nbsp;of <span id="heroTotal">0</span> topics done</div>
+          <div class="trace-bar" id="traceBar"></div>
+        </div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search topics — e.g. Smith chart, Nyquist, MOSFET…">
+      </div>
+      <div class="sections" id="sectionsList"></div>
+    </section>
+
+    <!-- PYQ -->
+    <section class="panel" id="tab-pyq">
+      <div class="hero">
+        <div class="hero-num"><span id="pyqPercent">0</span><span class="unit">%</span></div>
+        <div class="hero-meta">
+          <div class="hero-stat"><strong id="pyqSolved">0</strong>&nbsp;of <span id="pyqTotal">0</span> PYQs solved</div>
+        </div>
+      </div>
+      <div class="pyq-list" id="pyqList"></div>
+    </section>
+
+    <!-- MOCK TESTS -->
+    <section class="panel" id="tab-mocks">
+      <div class="mock-stats" id="mockStats">
+        <div class="stat-card"><div class="v" id="statTotal">0</div><div class="l">Tests taken</div></div>
+        <div class="stat-card"><div class="v" id="statAvg">—</div><div class="l">Average score</div></div>
+        <div class="stat-card"><div class="v" id="statBest">—</div><div class="l">Best score</div></div>
+      </div>
+      <div class="scope-wrap">
+        <svg id="scopeChart" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+      </div>
+      <button class="add-mock-btn" id="addMockBtn" type="button">+ Add mock test</button>
+      <form class="mock-form" id="mockForm" hidden>
+        <div class="row">
+          <div class="field">
+            <label for="mockTitle">Test title</label>
+            <input type="text" id="mockTitle" placeholder="e.g. Made Easy FLT 3" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="mockDate">Date</label>
+            <input type="date" id="mockDate" required>
+          </div>
+          <div class="field">
+            <label for="mockScore">Score (/100)</label>
+            <input type="number" id="mockScore" min="0" max="100" step="0.01" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="mockRemarks">Remarks (optional)</label>
+            <textarea id="mockRemarks" placeholder="Weak in EMFT, silly mistakes in Networks…"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn-primary">Save test</button>
+          <button type="button" class="btn-ghost" id="cancelMockBtn">Cancel</button>
+        </div>
+      </form>
+      <div class="mock-list" id="mockList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-actions">
+      <button class="footer-btn" id="exportBtn" type="button">Export backup</button>
+      <label class="footer-btn" style="cursor:pointer;">Import backup
+        <input type="file" id="importInput" accept="application/json" hidden>
+      </label>
+    </div>
+    <span class="footnote">Saved to your account · syncs across devices</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------------- Data ----------------
+const DATA = [
+  { id:'s1', title:'Engineering Mathematics', topics:[
+    { n:'Linear Algebra', d:'Vector space, basis, linear (in)dependence, matrix algebra, eigenvalues & eigenvectors, rank, existence/uniqueness of solutions.' },
+    { n:'Calculus', d:'Mean value theorems, definite & improper integrals, partial derivatives, maxima/minima, multiple integrals, line/surface/volume integrals, Taylor series.' },
+    { n:'Differential Equations', d:"First & higher order linear DEs, Cauchy's & Euler's equations, variation of parameters, PDEs, variable separable method, IVP/BVP." },
+    { n:'Vector Analysis', d:"Vector operations, gradient, divergence, curl, Gauss's, Green's & Stokes' theorems." },
+    { n:'Complex Analysis', d:"Analytic functions, Cauchy's integral theorem/formula, sequences, series, convergence tests, Taylor & Laurent series, residue theorem." },
+    { n:'Probability & Statistics', d:'Mean, median, mode, std deviation, combinatorial probability, binomial/Poisson/exponential/normal distributions, joint & conditional probability.' },
+  ]},
+  { id:'s2', title:'Networks, Signals and Systems', topics:[
+    { n:'Circuit Analysis', d:"Node/mesh analysis, superposition, Thevenin's & Norton's theorems, reciprocity, phasors, complex power, max power transfer, RL/RC/RLC via Laplace." },
+    { n:'Two-Port Networks', d:'Linear 2-port network parameters, wye-delta transformation.' },
+    { n:'Continuous-Time Signals', d:'Fourier series & transform, sampling theorem and applications.' },
+    { n:'Discrete-Time Signals', d:'DTFT, DFT, z-transform, discrete-time processing of continuous-time signals.' },
+    { n:'LTI Systems', d:'Causality, stability, impulse response, convolution, poles & zeros, frequency response, group & phase delay.' },
+  ]},
+  { id:'s3', title:'Electronic Devices', topics:[
+    { n:'Semiconductor Basics', d:'Energy bands, intrinsic/extrinsic semiconductors, equilibrium carrier concentration, direct/indirect bandgap.' },
+    { n:'Carrier Transport', d:'Diffusion & drift current, mobility, resistivity, generation/recombination, Poisson & continuity equations.' },
+    { n:'PN Junction & Zener Diode', d:'' },
+    { n:'BJT', d:'' },
+    { n:'MOS Capacitor & MOSFET', d:'' },
+    { n:'LED, Photodiode & Solar Cell', d:'' },
+  ]},
+  { id:'s4', title:'Analog Circuits', topics:[
+    { n:'Diode Circuits', d:'Clipping, clamping, rectifiers.' },
+    { n:'BJT & MOSFET Amplifiers', d:'Biasing, AC coupling, small-signal analysis, frequency response.' },
+    { n:'Current Mirrors & Differential Amplifiers', d:'' },
+    { n:'Op-amp Circuits', d:'Amplifiers, summers, differentiators, integrators.' },
+    { n:'Active Filters, Schmitt Triggers & Oscillators', d:'' },
+  ]},
+  { id:'s5', title:'Digital Circuits', topics:[
+    { n:'Number Representations', d:'Binary, integer & floating-point numbers.' },
+    { n:'Combinational Logic', d:'Boolean algebra, K-map minimization, logic gates, static CMOS implementations.' },
+    { n:'Arithmetic Circuits & Converters', d:'Arithmetic circuits, code converters, multiplexers, decoders.' },
+    { n:'Sequential Circuits', d:'Latches, flip-flops, counters, shift registers, finite state machines.' },
+    { n:'Timing', d:'Propagation delay, setup/hold time, critical path delay.' },
+    { n:'Data Converters', d:'Sample & hold circuits, ADCs, DACs.' },
+    { n:'Semiconductor Memories', d:'ROM, SRAM, DRAM.' },
+    { n:'Computer Organization', d:'Machine instructions, addressing modes, ALU, data-path & control unit, instruction pipelining.' },
+  ]},
+  { id:'s6', title:'Control Systems', topics:[
+    { n:'Basic Components & Feedback', d:'Basic control system components, feedback principle.' },
+    { n:'Transfer Function & Block Diagrams', d:'Transfer function, block diagram representation, signal flow graph.' },
+    { n:'Transient & Steady-State Analysis', d:'' },
+    { n:'Frequency Response & Stability', d:'Routh-Hurwitz and Nyquist stability criteria.' },
+    { n:'Bode & Root-Locus Plots', d:'' },
+    { n:'Compensation', d:'Lag, lead, and lag-lead compensation.' },
+    { n:'State Variable Model', d:'State variable model and solution of state equations of LTI systems.' },
+  ]},
+  { id:'s7', title:'Communications', topics:[
+    { n:'Random Processes', d:'Autocorrelation and power spectral density, properties of white noise, filtering through LTI systems.' },
+    { n:'Analog Communications', d:'AM/FM modulation & demodulation, spectra of AM and FM, superheterodyne receivers.' },
+    { n:'Information Theory', d:'Entropy, mutual information, channel capacity theorem.' },
+    { n:'Digital Communications', d:'PCM, DPCM, digital modulation (ASK/PSK/FSK/QAM), bandwidth, inter-symbol interference.' },
+    { n:'Detection & Performance', d:'MAP, ML detection, matched filter receiver, SNR and BER.' },
+    { n:'Error Correction', d:'Hamming codes, CRC.' },
+  ]},
+  { id:'s8', title:'Electromagnetics', topics:[
+    { n:"Maxwell's Equations", d:'Differential & integral forms, boundary conditions, wave equation, Poynting vector.' },
+    { n:'Plane Waves', d:'Reflection, refraction, polarization, phase & group velocity, propagation through media, skin depth.' },
+    { n:'Transmission Lines', d:'Equations, characteristic impedance, impedance matching & transformation, S-parameters, Smith chart.' },
+    { n:'Waveguides, Fibers & Antennas', d:'Rectangular & circular waveguides, optical fibers, dipole & monopole antennas, linear antenna arrays.' },
+  ]},
+];
+
+DATA.forEach(sec => sec.topics.forEach((t,i) => t.id = sec.id + '-' + i));
+const ALL_TOPICS = DATA.flatMap(s => s.topics.map(t => ({...t, sectionId:s.id})));
+
+// ---------------- State ----------------
+const STORAGE_KEY = 'gate-ece-tracker-v1';
+const DEFAULT_EXAM_DATE = '2027-02-01';
+let state = { checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
+let expandedSections = new Set();
+let searchQuery = '';
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, parsed);
+    }
+  }catch(e){ /* no saved state yet */ }
+}
+
+let saveTimer = null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    catch(e){ console.error('save failed', e); showToast('Could not save — try again'); }
+  }, 250);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function highlight(text, q){
+  if(!q) return escapeHtml(text);
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if(idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0,idx)) + '<mark>' + escapeHtml(text.slice(idx,idx+q.length)) + '</mark>' + escapeHtml(text.slice(idx+q.length));
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---------------- Render: Syllabus ----------------
+function sectionDone(sec){ return sec.topics.filter(t => state.checklist[t.id]).length; }
+
+function renderHero(){
+  const done = ALL_TOPICS.filter(t => state.checklist[t.id]).length;
+  const total = ALL_TOPICS.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('heroPercent').textContent = pct;
+  document.getElementById('heroDone').textContent = done;
+  document.getElementById('heroTotal').textContent = total;
+
+  const bar = document.getElementById('traceBar');
+  bar.innerHTML = DATA.map(sec => {
+    const p = Math.round((sectionDone(sec)/sec.topics.length)*100);
+    return `<div class="trace-seg" title="${escapeHtml(sec.title)} — ${p}%"><div class="trace-fill" style="width:${p}%"></div></div>`;
+  }).join('');
+}
+
+function renderSections(){
+  const q = searchQuery.trim().toLowerCase();
+  const container = document.getElementById('sectionsList');
+  let anyMatch = false;
+
+  const html = DATA.map((sec, si) => {
+    const matchedTopics = sec.topics.filter(t => !q || (t.n+' '+t.d).toLowerCase().includes(q));
+    if(q && matchedTopics.length === 0) return '';
+    anyMatch = true;
+    const done = sectionDone(sec);
+    const expanded = q ? true : expandedSections.has(sec.id);
+    const pads = sec.topics.map(t => `<span class="pad ${state.checklist[t.id] ? 'done' : ''}"></span>`).join('');
+    const topicsHtml = matchedTopics.map(t => `
+      <label class="topic-row">
+        <input type="checkbox" class="topic-check" data-topic="${t.id}" ${state.checklist[t.id] ? 'checked' : ''}>
+        <span class="topic-text">
+          <strong>${highlight(t.n, q)}</strong>
+          ${t.d ? `<small>${highlight(t.d, q)}</small>` : ''}
+        </span>
+      </label>`).join('');
+    return `
+      <div class="section-card ${expanded ? 'expanded' : ''}" data-section="${sec.id}">
+        <button class="section-head" type="button" data-toggle="${sec.id}">
+          <span class="section-num">${String(si+1).padStart(2,'0')}</span>
+          <span class="section-title">${escapeHtml(sec.title)}</span>
+          <span class="pad-row">${pads}</span>
+          <span class="section-pct">${done}/${sec.topics.length}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="section-body-inner">
+            <div class="topics">${topicsHtml}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = anyMatch ? html : `<div class="no-match">No topics match "${escapeHtml(searchQuery)}".</div>`;
+}
+
+// ---------------- Render: PYQ ----------------
+function renderPyq(){
+  let solvedSum = 0, totalSum = 0;
+  const html = DATA.map(sec => {
+    const rec = state.pyq[sec.id] || { solved:0, total:0 };
+    solvedSum += Number(rec.solved)||0;
+    totalSum += Number(rec.total)||0;
+    const pct = rec.total ? Math.round((rec.solved/rec.total)*100) : 0;
+    return `
+      <div class="pyq-row">
+        <div class="pyq-row-head"><span class="t">${escapeHtml(sec.title)}</span><span class="p">${pct}%</span></div>
+        <div class="pyq-inputs">
+          <label>Solved<input type="number" min="0" class="mono" data-pyq-solved="${sec.id}" value="${rec.solved||0}"></label>
+          <label>Total<input type="number" min="0" class="mono" data-pyq-total="${sec.id}" value="${rec.total||0}"></label>
+        </div>
+        <div class="pyq-bar"><div class="pyq-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+  document.getElementById('pyqList').innerHTML = html;
+
+  const overallPct = totalSum ? Math.round((solvedSum/totalSum)*100) : 0;
+  document.getElementById('pyqPercent').textContent = overallPct;
+  document.getElementById('pyqSolved').textContent = solvedSum;
+  document.getElementById('pyqTotal').textContent = totalSum;
+}
+
+// ---------------- Render: Mock tests ----------------
+function renderMocks(){
+  const tests = state.mocks;
+  const total = tests.length;
+  const avg = total ? (tests.reduce((a,t)=>a+Number(t.score),0)/total) : null;
+  const best = total ? Math.max(...tests.map(t=>Number(t.score))) : null;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAvg').textContent = avg === null ? '—' : avg.toFixed(1);
+  document.getElementById('statBest').textContent = best === null ? '—' : best;
+
+  const sortedDesc = [...tests].sort((a,b)=> b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1));
+  document.getElementById('mockList').innerHTML = total ? sortedDesc.map(t => `
+    <div class="mock-item">
+      <div class="mock-score ${Number(t.score) < 50 ? 'low' : ''}">${t.score}</div>
+      <div class="mock-body">
+        <div class="mock-title">${escapeHtml(t.title)}</div>
+        <div class="mock-date mono">${escapeHtml(t.date)}</div>
+        ${t.remarks ? `<div class="mock-remarks">${escapeHtml(t.remarks)}</div>` : ''}
+      </div>
+      <button class="mock-del" data-del="${t.id}" title="Delete">×</button>
+    </div>`).join('') : `<div class="mock-empty">No mock tests logged yet.</div>`;
+
+  renderScope();
+}
+
+function renderScope(){
+  const svg = document.getElementById('scopeChart');
+  const tests = [...state.mocks].sort((a,b)=> a.date.localeCompare(b.date));
+  if(tests.length === 0){
+    svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" class="scope-empty">no signal yet — add your first mock test</text>`;
+    return;
+  }
+  const W=600, H=180, padL=32, padR=14, padT=14, padB=10;
+  const innerW = W-padL-padR, innerH = H-padT-padB;
+  const n = tests.length;
+  const points = tests.map((t,i) => {
+    const x = padL + (n>1 ? (i*innerW/(n-1)) : innerW/2);
+    const y = padT + innerH - (Math.max(0,Math.min(100,Number(t.score)))/100)*innerH;
+    return {x,y,t};
+  });
+  let grid = '';
+  [0,25,50,75,100].forEach(v => {
+    const y = padT + innerH - (v/100)*innerH;
+    grid += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" class="scope-grid-line"/>
+      <text x="${padL-6}" y="${y+3}" class="scope-axis-label" text-anchor="end">${v}</text>`;
+  });
+  const poly = points.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const dots = points.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" class="scope-dot"><title>${escapeHtml(p.t.date)} · ${p.t.score}/100 · ${escapeHtml(p.t.title)}</title></circle>`).join('');
+  svg.innerHTML = `
+    <defs><filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter></defs>
+    ${grid}
+    <polyline points="${poly}" class="scope-line" filter="url(#glow)"/>
+    ${dots}`;
+}
+
+// ---------------- Countdown ----------------
+function renderCountdown(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exam = new Date(state.examDate + 'T00:00:00');
+  const diff = Math.round((exam - today) / 86400000);
+  document.getElementById('countdownNum').textContent = diff >= 0 ? diff : '0';
+  document.querySelector('.countdown-unit').textContent = diff >= 0 ? 'days to GATE' : 'exam day passed';
+}
+
+// ---------------- Render all ----------------
+function renderAll(){
+  renderHero();
+  renderSections();
+  renderPyq();
+  renderMocks();
+  renderCountdown();
+}
+
+// ---------------- Events ----------------
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('sectionsList').addEventListener('click', e => {
+  const head = e.target.closest('[data-toggle]');
+  if(head){
+    const id = head.dataset.toggle;
+    expandedSections.has(id) ? expandedSections.delete(id) : expandedSections.add(id);
+    renderSections();
+  }
+});
+document.getElementById('sectionsList').addEventListener('change', e => {
+  if(e.target.matches('input[data-topic]')){
+    state.checklist[e.target.dataset.topic] = e.target.checked;
+    saveState();
+    renderHero();
+    renderSections();
+  }
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderSections();
+});
+
+document.getElementById('pyqList').addEventListener('input', e => {
+  const solvedId = e.target.dataset.pyqSolved, totalId = e.target.dataset.pyqTotal;
+  const sid = solvedId || totalId;
+  if(!sid) return;
+  if(!state.pyq[sid]) state.pyq[sid] = { solved:0, total:0 };
+  if(solvedId) state.pyq[sid].solved = Math.max(0, Number(e.target.value)||0);
+  if(totalId) state.pyq[sid].total = Math.max(0, Number(e.target.value)||0);
+  saveState();
+  renderPyq();
+});
+
+const mockForm = document.getElementById('mockForm');
+const addMockBtn = document.getElementById('addMockBtn');
+addMockBtn.addEventListener('click', () => {
+  mockForm.hidden = false;
+  addMockBtn.hidden = true;
+  document.getElementById('mockDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('mockTitle').focus();
+});
+document.getElementById('cancelMockBtn').addEventListener('click', () => {
+  mockForm.reset();
+  mockForm.hidden = true;
+  addMockBtn.hidden = false;
+});
+mockForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const title = document.getElementById('mockTitle').value.trim();
+  const date = document.getElementById('mockDate').value;
+  const score = Number(document.getElementById('mockScore').value);
+  const remarks = document.getElementById('mockRemarks').value.trim();
+  if(!title || !date || Number.isNaN(score)) return;
+  state.mocks.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), title, date, score, remarks });
+  saveState();
+  mockForm.reset();
+  mockForm.hidden = true;
+  addMockBtn.hidden = false;
+  renderMocks();
+  showToast('Mock test saved');
+});
+document.getElementById('mockList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-del]');
+  if(btn){
+    state.mocks = state.mocks.filter(t => t.id !== btn.dataset.del);
+    saveState();
+    renderMocks();
+  }
+});
+
+const countdownWrap = document.getElementById('countdownWrap');
+const countdownChip = document.getElementById('countdownChip');
+const examDateInput = document.getElementById('examDateInput');
+countdownChip.addEventListener('click', () => {
+  examDateInput.value = state.examDate;
+  countdownWrap.classList.add('editing');
+  examDateInput.focus();
+});
+examDateInput.addEventListener('change', () => {
+  if(examDateInput.value){ state.examDate = examDateInput.value; saveState(); }
+  countdownWrap.classList.remove('editing');
+  renderCountdown();
+});
+examDateInput.addEventListener('blur', () => {
+  countdownWrap.classList.remove('editing');
+  renderCountdown();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'gate-ece-tracker-backup.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup exported');
+});
+document.getElementById('importInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, parsed);
+      saveState();
+      renderAll();
+      showToast('Backup imported');
+    }catch(err){ showToast('Could not read that file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ---------------- Init ----------------
+(async function init(){
+  await loadState();
+  renderAll();
+  document.getElementById('loadingScreen').style.display = 'none';
+})();
+</script>
+</body>
+</html>
