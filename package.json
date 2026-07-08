@@ -1,10 +1,8 @@
 {
   "name": "gate-ece-tracker",
   "private": true,
-  "dependencies": {
-    "@netlify/blobs": "^8.1.0"
-  },
-  "devDependencies": {
-    "@netlify/functions": "^3.0.0"
+  "scripts": {
+    "build": "node scripts/create-runtime-config.mjs",
+    "dev": "npx serve ."
   }
 }

@@ -1,4 +1,3 @@
-node_modules
-
-# Local Netlify folder
-.netlify
+supabase-config.js
+node_modules/
+.vercel/

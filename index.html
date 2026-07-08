@@ -258,12 +258,56 @@ footer{
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+.auth-shell{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px 18px;
+}
+.auth-card{
+  width:100%; max-width:390px; background:var(--paper-raised); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow); padding:24px;
+}
+.auth-card h2{font-size:22px; margin-bottom:5px;}
+.auth-card p{margin:0 0 18px; color:var(--muted); font-size:13px; line-height:1.45;}
+.auth-tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+.auth-tab{
+  background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:8px 2px;
+  margin-right:14px; position:relative;
+}
+.auth-tab.active{color:var(--ink);}
+.auth-tab.active::after{
+  content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--copper);
+}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.auth-field{display:flex; flex-direction:column; gap:5px; margin-bottom:11px;}
+.auth-field label{font-size:11px; color:var(--muted);}
+.auth-field input{
+  padding:10px 11px; border:1px solid var(--line); border-radius:7px; font-size:13.5px;
+  background:var(--paper-raised); color:var(--ink);
+}
+.auth-actions{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+.oauth-row{display:flex; gap:8px; margin-top:14px;}
+.oauth-row .btn-ghost{flex:1;}
+.auth-note{font-size:12px; color:var(--muted); margin-top:12px;}
+.topbar-actions{display:flex; align-items:center; gap:8px;}
+.user-chip{
+  max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+}
+.note-input{
+  width:100%; min-height:42px; resize:vertical; margin-top:7px; padding:8px 9px;
+  border:1px solid var(--grid-line); border-radius:6px; font-size:12.5px; color:var(--ink);
+  background:var(--paper);
+}
+
 @media (max-width:480px){
   .brand h1{font-size:17px;}
   .section-title{display:none;}
   .hero-num{font-size:40px;}
   .mock-stats{flex-wrap:wrap;}
   .stat-card{min-width:calc(50% - 5px);}
+  .topbar{align-items:flex-start;}
+  .topbar-actions{flex-direction:column; align-items:flex-end;}
+  .user-chip{max-width:115px;}
 }
 </style>
 </head>
@@ -271,7 +315,73 @@ footer{
 
 <div id="loadingScreen">loading tracker…</div>
 
-<div class="app">
+<section class="auth-shell" id="authShell" hidden>
+  <div class="auth-card">
+    <h2 id="authTitle">Welcome back</h2>
+    <p id="authSubtitle">Sign in to keep your GATE ECE tracker private and synced.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth-panel="login" type="button">Login</button>
+      <button class="auth-tab" data-auth-panel="register" type="button">Register</button>
+      <button class="auth-tab" data-auth-panel="forgot" type="button">Forgot</button>
+    </div>
+
+    <form class="auth-form active" id="loginForm">
+      <div class="auth-field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <div class="auth-actions">
+        <button type="submit" class="btn-primary">Login</button>
+      </div>
+    </form>
+
+    <form class="auth-form" id="registerForm">
+      <div class="auth-field">
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" autocomplete="new-password" minlength="8" required>
+      </div>
+      <div class="auth-actions">
+        <button type="submit" class="btn-primary">Create account</button>
+      </div>
+    </form>
+
+    <form class="auth-form" id="forgotForm">
+      <div class="auth-field">
+        <label for="forgotEmail">Email</label>
+        <input type="email" id="forgotEmail" autocomplete="email" required>
+      </div>
+      <div class="auth-actions">
+        <button type="submit" class="btn-primary">Send reset link</button>
+      </div>
+    </form>
+
+    <form class="auth-form" id="resetForm">
+      <div class="auth-field">
+        <label for="resetPassword">New password</label>
+        <input type="password" id="resetPassword" autocomplete="new-password" minlength="8" required>
+      </div>
+      <div class="auth-actions">
+        <button type="submit" class="btn-primary">Update password</button>
+      </div>
+    </form>
+
+    <div class="oauth-row">
+      <button class="btn-ghost" id="googleLoginBtn" type="button">Google</button>
+      <button class="btn-ghost" id="githubLoginBtn" type="button">GitHub</button>
+    </div>
+    <div class="auth-note" id="authMessage"></div>
+  </div>
+</section>
+
+<div class="app" id="appShell" hidden>
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">EC</span>
@@ -280,12 +390,16 @@ footer{
         <p class="tagline">Syllabus · PYQs · Mock Tests</p>
       </div>
     </div>
+    <div class="topbar-actions">
     <div class="countdown-wrap" id="countdownWrap">
       <button class="countdown" id="countdownChip" type="button" title="Click to set your exam date">
         <span class="countdown-num" id="countdownNum">—</span>
         <span class="countdown-unit">days to GATE</span>
       </button>
       <input type="date" class="countdown-input" id="examDateInput">
+    </div>
+      <span class="user-chip" id="userEmail"></span>
+      <button class="footer-btn" id="logoutBtn" type="button">Logout</button>
     </div>
   </header>
 
@@ -378,7 +492,17 @@ footer{
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script src="supabase-config.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+
+const supabaseConfig = window.SUPABASE_CONFIG || {};
+const hasSupabaseConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
+const supabase = hasSupabaseConfig ? createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+  auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true },
+}) : null;
+let currentSession = null;
+
 // ---------------- Data ----------------
 const DATA = [
   { id:'s1', title:'Engineering Mathematics', topics:[
@@ -451,36 +575,138 @@ const ALL_TOPICS = DATA.flatMap(s => s.topics.map(t => ({...t, sectionId:s.id}))
 
 // ---------------- State ----------------
 const DEFAULT_EXAM_DATE = '2027-02-01';
-let state = { checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
+let state = { checklist:{}, notes:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
 let expandedSections = new Set();
 let searchQuery = '';
 
 async function loadState(){
-  try{
-    const res = await fetch('/api/state');
-    if(res.ok){
-      const { value } = await res.json();
-      if(value){
-        state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, value);
-      }
-    }
-  }catch(e){ /* no saved state yet */ }
+  if(!supabase || !currentSession) return;
+  const [progressRes, notesRes, pyqRes, mocksRes, settingsRes] = await Promise.all([
+    supabase.from('user_progress').select('chapter_id, completed').order('chapter_id'),
+    supabase.from('user_notes').select('chapter_id, note').order('chapter_id'),
+    supabase.from('user_pyq_progress').select('subject_id, solved, total').order('subject_id'),
+    supabase.from('mock_tests').select('id, title, test_date, score, remarks').order('test_date', { ascending:false }),
+    supabase.from('user_settings').select('exam_date').maybeSingle(),
+  ]);
+
+  const firstError = [progressRes, notesRes, pyqRes, mocksRes, settingsRes].find(r => r.error)?.error;
+  if(firstError) throw firstError;
+
+  state = { checklist:{}, notes:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
+  progressRes.data?.forEach(row => { state.checklist[row.chapter_id] = Boolean(row.completed); });
+  notesRes.data?.forEach(row => { state.notes[row.chapter_id] = row.note || ''; });
+  pyqRes.data?.forEach(row => {
+    state.pyq[row.subject_id] = { solved:Number(row.solved)||0, total:Number(row.total)||0 };
+  });
+  state.mocks = (mocksRes.data || []).map(row => ({
+    id:row.id, title:row.title, date:row.test_date, score:Number(row.score), remarks:row.remarks || '',
+  }));
+  if(settingsRes.data?.exam_date) state.examDate = settingsRes.data.exam_date;
 }
 
-let saveTimer = null;
-function saveState(){
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
+const saveTimers = new Map();
+function debounceSave(key, fn){
+  clearTimeout(saveTimers.get(key));
+  saveTimers.set(key, setTimeout(fn, 250));
+}
+
+async function saveProgress(chapterId, completed){
+  if(!supabase) return;
+  try{
+    const { error } = await supabase.from('user_progress').upsert({
+      chapter_id:chapterId,
+      completed:Boolean(completed),
+      completion_date:completed ? new Date().toISOString().slice(0,10) : null,
+    }, { onConflict:'user_id,chapter_id' });
+    if(error) throw error;
+  }catch(e){ console.error('progress save failed', e); showToast('Could not save progress'); }
+}
+
+function saveNote(chapterId, note){
+  debounceSave('note:' + chapterId, async () => {
+    if(!supabase) return;
     try{
-      const res = await fetch('/api/state', {
-        method:'PUT',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify(state),
-      });
-      if(!res.ok) throw new Error('save failed with status ' + res.status);
-    }
-    catch(e){ console.error('save failed', e); showToast('Could not save — try again'); }
-  }, 250);
+      const { error } = await supabase.from('user_notes').upsert({
+        chapter_id:chapterId,
+        note:note.slice(0, 5000),
+      }, { onConflict:'user_id,chapter_id' });
+      if(error) throw error;
+    }catch(e){ console.error('note save failed', e); showToast('Could not save note'); }
+  });
+}
+
+function savePyq(subjectId){
+  debounceSave('pyq:' + subjectId, async () => {
+    if(!supabase) return;
+    const rec = state.pyq[subjectId] || { solved:0, total:0 };
+    const solved = Math.max(0, Number(rec.solved)||0);
+    const total = Math.max(solved, Math.max(0, Number(rec.total)||0));
+    try{
+      const { error } = await supabase.from('user_pyq_progress').upsert({
+        subject_id:subjectId,
+        solved,
+        total,
+      }, { onConflict:'user_id,subject_id' });
+      if(error) throw error;
+    }catch(e){ console.error('pyq save failed', e); showToast('Could not save PYQs'); }
+  });
+}
+
+function saveSettings(){
+  debounceSave('settings', async () => {
+    if(!supabase) return;
+    try{
+      const { error } = await supabase.from('user_settings').upsert({
+        exam_date:state.examDate,
+      }, { onConflict:'user_id' });
+      if(error) throw error;
+    }catch(e){ console.error('settings save failed', e); showToast('Could not save settings'); }
+  });
+}
+
+async function addMockTest(test){
+  if(!supabase) return;
+  const { data, error } = await supabase.from('mock_tests').insert({
+    title:test.title,
+    test_date:test.date,
+    score:test.score,
+    remarks:test.remarks,
+  }).select('id').single();
+  if(error) throw error;
+  test.id = data.id;
+}
+
+async function deleteMockTest(id){
+  if(!supabase) return;
+  const { error } = await supabase.from('mock_tests').delete().eq('id', id);
+  if(error) throw error;
+}
+
+async function importStateToSupabase(nextState){
+  if(!supabase) return;
+  const progressRows = Object.entries(nextState.checklist || {}).map(([chapter_id, completed]) => ({
+    chapter_id, completed:Boolean(completed), completion_date:completed ? new Date().toISOString().slice(0,10) : null,
+  }));
+  const noteRows = Object.entries(nextState.notes || {}).filter(([, note]) => String(note || '').trim()).map(([chapter_id, note]) => ({
+    chapter_id, note:String(note).slice(0, 5000),
+  }));
+  const pyqRows = Object.entries(nextState.pyq || {}).map(([subject_id, rec]) => ({
+    subject_id,
+    solved:Math.max(0, Number(rec.solved)||0),
+    total:Math.max(Math.max(0, Number(rec.solved)||0), Math.max(0, Number(rec.total)||0)),
+  }));
+  const mockRows = (nextState.mocks || []).map(t => ({
+    title:String(t.title || '').slice(0, 160),
+    test_date:t.date,
+    score:Math.max(0, Math.min(100, Number(t.score)||0)),
+    remarks:String(t.remarks || '').slice(0, 2000),
+  })).filter(t => t.title && t.test_date);
+
+  if(progressRows.length) await supabase.from('user_progress').upsert(progressRows, { onConflict:'user_id,chapter_id' }).throwOnError();
+  if(noteRows.length) await supabase.from('user_notes').upsert(noteRows, { onConflict:'user_id,chapter_id' }).throwOnError();
+  if(pyqRows.length) await supabase.from('user_pyq_progress').upsert(pyqRows, { onConflict:'user_id,subject_id' }).throwOnError();
+  if(mockRows.length) await supabase.from('mock_tests').insert(mockRows).throwOnError();
+  await supabase.from('user_settings').upsert({ exam_date:nextState.examDate || DEFAULT_EXAM_DATE }, { onConflict:'user_id' }).throwOnError();
 }
 
 function escapeHtml(str){
@@ -531,13 +757,14 @@ function renderSections(){
     const expanded = q ? true : expandedSections.has(sec.id);
     const pads = sec.topics.map(t => `<span class="pad ${state.checklist[t.id] ? 'done' : ''}"></span>`).join('');
     const topicsHtml = matchedTopics.map(t => `
-      <label class="topic-row">
+      <div class="topic-row">
         <input type="checkbox" class="topic-check" data-topic="${t.id}" ${state.checklist[t.id] ? 'checked' : ''}>
         <span class="topic-text">
           <strong>${highlight(t.n, q)}</strong>
           ${t.d ? `<small>${highlight(t.d, q)}</small>` : ''}
+          <textarea class="note-input" data-note="${t.id}" placeholder="Private note">${escapeHtml(state.notes[t.id] || '')}</textarea>
         </span>
-      </label>`).join('');
+      </div>`).join('');
     return `
       <div class="section-card ${expanded ? 'expanded' : ''}" data-section="${sec.id}">
         <button class="section-head" type="button" data-toggle="${sec.id}">
@@ -681,9 +908,15 @@ document.getElementById('sectionsList').addEventListener('click', e => {
 document.getElementById('sectionsList').addEventListener('change', e => {
   if(e.target.matches('input[data-topic]')){
     state.checklist[e.target.dataset.topic] = e.target.checked;
-    saveState();
+    saveProgress(e.target.dataset.topic, e.target.checked);
     renderHero();
     renderSections();
+  }
+});
+document.getElementById('sectionsList').addEventListener('input', e => {
+  if(e.target.matches('textarea[data-note]')){
+    state.notes[e.target.dataset.note] = e.target.value;
+    saveNote(e.target.dataset.note, e.target.value);
   }
 });
 
@@ -699,7 +932,7 @@ document.getElementById('pyqList').addEventListener('input', e => {
   if(!state.pyq[sid]) state.pyq[sid] = { solved:0, total:0 };
   if(solvedId) state.pyq[sid].solved = Math.max(0, Number(e.target.value)||0);
   if(totalId) state.pyq[sid].total = Math.max(0, Number(e.target.value)||0);
-  saveState();
+  savePyq(sid);
   renderPyq();
 });
 
@@ -716,27 +949,42 @@ document.getElementById('cancelMockBtn').addEventListener('click', () => {
   mockForm.hidden = true;
   addMockBtn.hidden = false;
 });
-mockForm.addEventListener('submit', e => {
+mockForm.addEventListener('submit', async e => {
   e.preventDefault();
   const title = document.getElementById('mockTitle').value.trim();
   const date = document.getElementById('mockDate').value;
   const score = Number(document.getElementById('mockScore').value);
   const remarks = document.getElementById('mockRemarks').value.trim();
   if(!title || !date || Number.isNaN(score)) return;
-  state.mocks.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), title, date, score, remarks });
-  saveState();
-  mockForm.reset();
-  mockForm.hidden = true;
-  addMockBtn.hidden = false;
+  const test = { id:'pending-' + Date.now(), title:title.slice(0,160), date, score:Math.max(0, Math.min(100, score)), remarks:remarks.slice(0,2000) };
+  state.mocks.push(test);
   renderMocks();
-  showToast('Mock test saved');
+  try{
+    await addMockTest(test);
+    mockForm.reset();
+    mockForm.hidden = true;
+    addMockBtn.hidden = false;
+    renderMocks();
+    showToast('Mock test saved');
+  }catch(err){
+    state.mocks = state.mocks.filter(t => t.id !== test.id);
+    renderMocks();
+    showToast('Could not save mock test');
+  }
 });
-document.getElementById('mockList').addEventListener('click', e => {
+document.getElementById('mockList').addEventListener('click', async e => {
   const btn = e.target.closest('[data-del]');
   if(btn){
+    const oldMocks = [...state.mocks];
     state.mocks = state.mocks.filter(t => t.id !== btn.dataset.del);
-    saveState();
     renderMocks();
+    try{
+      await deleteMockTest(btn.dataset.del);
+    }catch(err){
+      state.mocks = oldMocks;
+      renderMocks();
+      showToast('Could not delete mock test');
+    }
   }
 });
 
@@ -749,7 +997,7 @@ countdownChip.addEventListener('click', () => {
   examDateInput.focus();
 });
 examDateInput.addEventListener('change', () => {
-  if(examDateInput.value){ state.examDate = examDateInput.value; saveState(); }
+  if(examDateInput.value){ state.examDate = examDateInput.value; saveSettings(); }
   countdownWrap.classList.remove('editing');
   renderCountdown();
 });
@@ -771,11 +1019,12 @@ document.getElementById('importInput').addEventListener('change', e => {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try{
       const parsed = JSON.parse(reader.result);
-      state = Object.assign({ checklist:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, parsed);
-      saveState();
+      state = Object.assign({ checklist:{}, notes:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE }, parsed);
+      await importStateToSupabase(state);
+      await loadState();
       renderAll();
       showToast('Backup imported');
     }catch(err){ showToast('Could not read that file'); }
@@ -784,10 +1033,138 @@ document.getElementById('importInput').addEventListener('change', e => {
   e.target.value = '';
 });
 
+// ---------------- Auth ----------------
+function setAuthMessage(msg){
+  document.getElementById('authMessage').textContent = msg || '';
+}
+
+function showAuthPanel(panel){
+  document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.authPanel === panel));
+  document.querySelectorAll('.auth-form').forEach(form => form.classList.toggle('active', form.id === panel + 'Form'));
+  const copy = {
+    login:['Welcome back', 'Sign in to keep your GATE ECE tracker private and synced.'],
+    register:['Create account', 'Use email/password or continue with Google/GitHub.'],
+    forgot:['Reset password', 'Enter your email and Supabase will send a reset link.'],
+    reset:['Set new password', 'Choose a new password to finish account recovery.'],
+  }[panel];
+  document.getElementById('authTitle').textContent = copy[0];
+  document.getElementById('authSubtitle').textContent = copy[1];
+  setAuthMessage('');
+}
+
+async function showSignedIn(session){
+  currentSession = session;
+  document.getElementById('authShell').hidden = true;
+  document.getElementById('appShell').hidden = false;
+  document.getElementById('userEmail').textContent = session.user.email || 'Signed in';
+  try{
+    await loadState();
+    renderAll();
+  }catch(err){
+    console.error('load failed', err);
+    showToast('Could not load your tracker');
+  }
+}
+
+function showSignedOut(){
+  currentSession = null;
+  state = { checklist:{}, notes:{}, pyq:{}, mocks:[], examDate:DEFAULT_EXAM_DATE };
+  document.getElementById('appShell').hidden = true;
+  document.getElementById('authShell').hidden = false;
+}
+
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => showAuthPanel(tab.dataset.authPanel));
+});
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  setAuthMessage('Signing in...');
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  setAuthMessage(error ? error.message : '');
+});
+
+document.getElementById('registerForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  setAuthMessage('Creating account...');
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options:{ emailRedirectTo:window.location.origin },
+  });
+  setAuthMessage(error ? error.message : 'Check your email to verify your account.');
+});
+
+document.getElementById('forgotForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  setAuthMessage('Sending reset link...');
+  const email = document.getElementById('forgotEmail').value.trim();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo:window.location.origin });
+  setAuthMessage(error ? error.message : 'Password reset email sent.');
+});
+
+document.getElementById('resetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  setAuthMessage('Updating password...');
+  const password = document.getElementById('resetPassword').value;
+  const { error } = await supabase.auth.updateUser({ password });
+  if(error){
+    setAuthMessage(error.message);
+    return;
+  }
+  setAuthMessage('');
+  const { data } = await supabase.auth.getSession();
+  if(data.session) await showSignedIn(data.session);
+});
+
+document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:window.location.origin } });
+});
+
+document.getElementById('githubLoginBtn').addEventListener('click', async () => {
+  if(!supabase){ setAuthMessage('Supabase is not configured yet.'); return; }
+  await supabase.auth.signInWithOAuth({ provider:'github', options:{ redirectTo:window.location.origin } });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if(!supabase) return;
+  await supabase.auth.signOut();
+});
+
 // ---------------- Init ----------------
 (async function init(){
-  await loadState();
-  renderAll();
+  if(!hasSupabaseConfig){
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('authShell').hidden = false;
+    setAuthMessage('Supabase is not configured yet. Add supabase-config.js from the example file.');
+    return;
+  }
+
+  const { data } = await supabase.auth.getSession();
+  if(data.session) await showSignedIn(data.session);
+  else showSignedOut();
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if(event === 'PASSWORD_RECOVERY'){
+      currentSession = session;
+      document.getElementById('appShell').hidden = true;
+      document.getElementById('authShell').hidden = false;
+      showAuthPanel('reset');
+      return;
+    }
+    if(session) showSignedIn(session);
+    else showSignedOut();
+  });
+
   document.getElementById('loadingScreen').style.display = 'none';
 })();
 </script>
