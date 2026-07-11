@@ -1141,32 +1141,34 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 // ---------------- Init ----------------
-(async function init(){
+(function init(){
   if(!hasSupabaseConfig){
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('authShell').hidden = false;
     setAuthMessage('Supabase is not configured yet. Add supabase-config.js from the example file.');
     return;
   }
-
-  const { data } = await supabase.auth.getSession();
-  if(data.session) await showSignedIn(data.session);
-  else showSignedOut();
-
+  let loadingHidden = false;
+  function hideLoadingOnce(){
+    if(loadingHidden) return;
+    loadingHidden = true;
+    document.getElementById('loadingScreen').style.display = 'none';
+  }
   supabase.auth.onAuthStateChange((event, session) => {
     if(event === 'PASSWORD_RECOVERY'){
       currentSession = session;
       document.getElementById('appShell').hidden = true;
       document.getElementById('authShell').hidden = false;
       showAuthPanel('reset');
+      hideLoadingOnce();
       return;
     }
     if(session) showSignedIn(session);
     else showSignedOut();
+    hideLoadingOnce();
   });
-
-  document.getElementById('loadingScreen').style.display = 'none';
 })();
 </script>
 </body>
+</html>
 </html>
